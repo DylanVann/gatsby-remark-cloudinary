@@ -1,0 +1,6 @@
+node_modules
+/utils
+/__tests__/*
+tests
+/*.js
+
