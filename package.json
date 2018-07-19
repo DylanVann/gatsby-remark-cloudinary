@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Convert media to custom components with cloudinary urls.",
   "keywords": [
-    "contenful",
+    "cloudinary",
     "gatsby",
     "images"
   ],
