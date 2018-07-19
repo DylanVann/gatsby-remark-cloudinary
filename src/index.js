@@ -126,7 +126,8 @@ const htmlForNode = async function({
 
         // Construct new image node w/ aspect ratio placeholder
         rawHTML = imgHTML({
-            node,
+            title: node.title,
+            alt: node.alt,
             srcFallback,
             srcSet,
             base64,
