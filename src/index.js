@@ -1,7 +1,7 @@
-import {captionHTML} from "./utils/captionHTML";
-import {getBase64ImgFromUrl} from "./utils/getBase64ImgFromUrl";
-import {imgHTML} from "./utils/imgHTML";
-import {linkToOriginalHTML} from "./utils/linkToOriginalHTML";
+import { captionHTML } from './utils/captionHTML'
+import { getBase64ImgFromUrl } from './utils/getBase64ImgFromUrl'
+import { imgHTML } from './utils/imgHTML'
+import { linkToOriginalHTML } from './utils/linkToOriginalHTML'
 
 const cloudinary = require('cloudinary')
 const slash = require(`slash`)
@@ -11,8 +11,8 @@ const select = require(`unist-util-select`)
 const md5File = require('md5-file/promise')
 const _ = require(`lodash`)
 const Promise = require(`bluebird`)
-import {uploadOrGetMetadata} from 'cloudinary-promised'
-import {videoHTML} from "./utils/videoHTML";
+import { uploadOrGetMetadata } from 'cloudinary-promised'
+import { videoHTML } from './utils/videoHTML'
 
 const defaults = {
     maxWidth: 650,
@@ -23,7 +23,7 @@ const defaults = {
 }
 
 // Gets the imageNode containing info like the absolutePath.
-const getImageNode = ({node, files, parentNode}) => {
+const getImageNode = ({ node, files, parentNode }) => {
     const imagePath = slash(path.join(parentNode.dir, node.url))
     const imageNode = _.find(files, file => {
         if (file && file.absolutePath) {
@@ -38,7 +38,7 @@ const getImageNode = ({node, files, parentNode}) => {
 }
 
 // Gets a cache key that is unique for a given image and set of options.
-const getCacheKey = async ({path, options, fileName}) => {
+const getCacheKey = async ({ path, options, fileName }) => {
     const optionsHash = crypto
         .createHash(`md5`)
         .update(JSON.stringify(options))
@@ -48,16 +48,24 @@ const getCacheKey = async ({path, options, fileName}) => {
 }
 
 // Returns the html for a markdown media node.
-const htmlForNode = async function ({node, files, cacheKey, imageNode, cloudinaryConfig, options}) {
+const htmlForNode = async function({
+    node,
+    files,
+    cacheKey,
+    imageNode,
+    cloudinaryConfig,
+    options,
+}) {
     const absolutePath = imageNode.absolutePath
 
     // Uploading to cloudinary, or just getting dimensions if it's already there.
-    const file = await uploadOrGetMetadata(cacheKey, absolutePath, cloudinaryConfig)
+    const file = await uploadOrGetMetadata(
+        cacheKey,
+        absolutePath,
+        cloudinaryConfig,
+    )
 
-    const {
-        width,
-        height,
-    } = file
+    const { width, height } = file
 
     // Will be used go reserve space for the media.
     const aspectRatio = width / height
@@ -78,15 +86,15 @@ const htmlForNode = async function ({node, files, cacheKey, imageNode, cloudinar
     if (isVideo) {
         const srcVideoPoster = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-            }/video/upload/w_${presentationWidth}/${cacheKey}.jpg`
+        }/video/upload/w_${presentationWidth}/${cacheKey}.jpg`
         const srcVideo = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-            }/video/upload/w_${presentationWidth}/${cacheKey}.mp4`
+        }/video/upload/w_${presentationWidth}/${cacheKey}.mp4`
 
         // Base64 version of the poster.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-            }/video/upload/w_40/${cacheKey}.png`
+        }/video/upload/w_40/${cacheKey}.png`
 
         const base64 = await getBase64ImgFromUrl(base64Url)
 
@@ -95,7 +103,7 @@ const htmlForNode = async function ({node, files, cacheKey, imageNode, cloudinar
             srcVideoPoster,
             base64,
             paddingBottom,
-            presentationWidth
+            presentationWidth,
         })
     } else {
         // Responsive image sources
@@ -107,12 +115,12 @@ const htmlForNode = async function ({node, files, cacheKey, imageNode, cloudinar
         // Fallback src for max width.
         const srcFallback = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-            }/image/upload/w_${presentationWidth}/${cacheKey}.jpg`
+        }/image/upload/w_${presentationWidth}/${cacheKey}.jpg`
 
         // Base64 version of the image.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-            }/image/upload/w_40/${cacheKey}.jpg`
+        }/image/upload/w_40/${cacheKey}.jpg`
         const base64 = await getBase64ImgFromUrl(base64Url)
 
         // Construct new image node w/ aspect ratio placeholder
@@ -146,30 +154,48 @@ const htmlForNode = async function ({node, files, cacheKey, imageNode, cloudinar
     return rawHTML
 }
 
-const cachedHtmlForNode = async ({node, files, cache, parentNode, cloudinaryConfig, options}) => {
+const cachedHtmlForNode = async ({
+    node,
+    files,
+    cache,
+    parentNode,
+    cloudinaryConfig,
+    options,
+}) => {
     const srcSplit = node.url.split(`/`)
     const fileName = srcSplit[srcSplit.length - 1]
 
-    const imageNode = getImageNode({node, files, parentNode})
+    const imageNode = getImageNode({ node, files, parentNode })
     if (!imageNode) return
     const absolutePath = imageNode.absolutePath
 
-    const cacheKey = await getCacheKey({path: absolutePath, options, fileName})
+    const cacheKey = await getCacheKey({
+        path: absolutePath,
+        options,
+        fileName,
+    })
     const cachedRawHTML = await cache.get(cacheKey)
     if (cachedRawHTML) {
         return cachedRawHTML
     }
 
-    const result = await htmlForNode({node, files, cacheKey, imageNode, cloudinaryConfig, options})
+    const result = await htmlForNode({
+        node,
+        files,
+        cacheKey,
+        imageNode,
+        cloudinaryConfig,
+        options,
+    })
     await cache.set(cacheKey, result)
     return result
 }
 
 module.exports = async (
-    {files, markdownNode, markdownAST, pathPrefix, getNode, reporter, cache},
-    pluginOptions
+    { files, markdownNode, markdownAST, pathPrefix, getNode, reporter, cache },
+    pluginOptions,
 ) => {
-    const options = _.defaults(pluginOptions, defaults, {pathPrefix})
+    const options = _.defaults(pluginOptions, defaults, { pathPrefix })
 
     const cloudinaryConfig = {
         cloud_name: pluginOptions.cloudName,
@@ -188,14 +214,22 @@ module.exports = async (
     if (!parentNode || !parentNode.dir) return null
 
     const promises = markdownImageNodes.map(
-        node => new Promise((resolve) => {
-            cachedHtmlForNode({node, files, cache, parentNode, cloudinaryConfig, options}).then((html => {
-                // Replace the image node with an inline HTML node.
-                node.type = `html`
-                node.value = html
-                resolve(node)
-            }))
-        })
+        node =>
+            new Promise(resolve => {
+                cachedHtmlForNode({
+                    node,
+                    files,
+                    cache,
+                    parentNode,
+                    cloudinaryConfig,
+                    options,
+                }).then(html => {
+                    // Replace the image node with an inline HTML node.
+                    node.type = `html`
+                    node.value = html
+                    resolve(node)
+                })
+            }),
     )
 
     return Promise.all(promises).then(nodes => nodes.filter(node => !!node))
