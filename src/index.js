@@ -16,6 +16,7 @@ import { videoHTML } from './utils/videoHTML'
 
 const defaults = {
     maxWidth: 650,
+    base64Width: 10,
     wrapperStyle: ``,
     backgroundColor: `white`,
     linkImagesToOriginal: false,
@@ -94,7 +95,7 @@ const htmlForNode = async function({
         // Base64 version of the poster.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/video/upload/w_40/${cacheKey}.png`
+        }/video/upload/w_${options.base64Width}/${cacheKey}.png`
 
         const base64 = await getBase64ImgFromUrl(base64Url)
 
@@ -120,7 +121,7 @@ const htmlForNode = async function({
         // Base64 version of the image.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/image/upload/w_40/${cacheKey}.jpg`
+        }/image/upload/w_${options.base64Width}/${cacheKey}.jpg`
         const base64 = await getBase64ImgFromUrl(base64Url)
 
         // Construct new image node w/ aspect ratio placeholder
