@@ -105,6 +105,7 @@ const htmlForNode = async function({
         }
         rawHTML = imgHTML(props)
     } else {
+        const imgAlt = node.alt
         // Responsive image sources
         const imgSrcSet = ''
         const imgWebPSrcSet = ''
@@ -125,7 +126,7 @@ const htmlForNode = async function({
         const imgBase64 = await getBase64ImgFromUrl(base64Url)
 
         const props: FastImageImageBestProps = {
-            imgAlt: node.alt,
+            imgAlt,
             imgSrc,
             imgWebPSrc,
             imgSrcSet,
