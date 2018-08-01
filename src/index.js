@@ -52,16 +52,16 @@ const getCacheKey = async ({ path, options, fileName }) => {
 const htmlForNode = async function({
     node,
     files,
-    cacheKey,
     imageNode,
     cloudinaryConfig,
     options,
 }) {
     const absolutePath = imageNode.absolutePath
+    const id = await md5File(absolutePath)
 
     // Uploading to cloudinary, or just getting dimensions if it's already there.
     const file = await uploadOrGetMetadata(
-        cacheKey,
+        id,
         absolutePath,
         cloudinaryConfig,
     )
@@ -87,15 +87,15 @@ const htmlForNode = async function({
     if (isVideo) {
         const srcVideoPoster = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/video/upload/w_${presentationWidth}/${cacheKey}.jpg`
+        }/video/upload/w_${presentationWidth}/${id}.jpg`
         const srcVideo = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/video/upload/w_${presentationWidth}/${cacheKey}.mp4`
+        }/video/upload/w_${presentationWidth}/${id}.mp4`
 
         // Base64 version of the poster.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/video/upload/w_${options.base64Width}/${cacheKey}.png`
+        }/video/upload/w_${options.base64Width}/${id}.png`
 
         const base64 = await getBase64ImgFromUrl(base64Url)
 
@@ -116,12 +116,12 @@ const htmlForNode = async function({
         // Fallback src for max width.
         const srcFallback = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/image/upload/w_${presentationWidth}/${cacheKey}.jpg`
+        }/image/upload/w_${presentationWidth}/${id}.jpg`
 
         // Base64 version of the image.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
-        }/image/upload/w_${options.base64Width}/${cacheKey}.jpg`
+        }/image/upload/w_${options.base64Width}/${id}.jpg`
         const base64 = await getBase64ImgFromUrl(base64Url)
 
         // Construct new image node w/ aspect ratio placeholder
