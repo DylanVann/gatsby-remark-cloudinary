@@ -11,8 +11,10 @@
   "author": "Dylan Vann <dylan@dylanvann.com>",
   "main": "index.js",
   "scripts": {
-    "build": "babel src --out-dir . --ignore **/__tests__",
-    "format": "prettier --write 'src/**/*.js' '*.js'",
+    "tsc": "tsc",
+    "lint": "tslint -p . -t codeFrame 'src/**/*.{js,jsx,ts,tsx}'",
+    "build": "babel --extensions '.ts' src --out-dir . --ignore **/__tests__",
+    "format": "prettier --write 'src/**/*.ts' '*.js'",
     "prepare": "cross-env NODE_ENV=production npm run build",
     "watch": "babel -w src --out-dir . --ignore **/__tests__"
   },
@@ -24,6 +26,7 @@
     "is-relative-url": "^2.0.0",
     "lodash": "^4.17.4",
     "md5-file": "^4.0.0",
+    "react-fast-image": "^0.0.21",
     "sharp": "^0.20.2",
     "unist-util-select": "^1.5.0"
   },
@@ -32,8 +35,13 @@
     "@babel/core": "7.0.0-beta.51",
     "@babel/plugin-transform-runtime": "^7.0.0-beta.54",
     "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/preset-typescript": "^7.0.0-beta.55",
     "cross-env": "^5.0.5",
-    "prettier": "^1.13.7"
+    "prettier": "^1.13.7",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.14.0",
+    "tslint-config-standard": "^7.1.0",
+    "typescript": "^3.0.1"
   },
   "peerDependencies": {
     "gatsby": ">2.0.0-alpha"

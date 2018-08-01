@@ -1,6 +1,6 @@
-const axios = require(`axios`)
+import axios from 'axios'
 
-export const getBase64ImgFromUrl = async url => {
+export const getBase64ImgFromUrl = async (url: string) => {
     const response = await axios({
         method: `GET`,
         responseType: `arraybuffer`,

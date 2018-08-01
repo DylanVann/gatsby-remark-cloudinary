@@ -1,8 +1,5 @@
-import { captionHTML } from './utils/captionHTML'
-import { getBase64ImgFromUrl } from './utils/getBase64ImgFromUrl'
-import { imgHTML } from './utils/imgHTML'
-import { linkToOriginalHTML } from './utils/linkToOriginalHTML'
-
+import { getBase64ImgFromUrl } from './getBase64ImgFromUrl'
+import imgHTML from './imgHTML'
 const cloudinary = require('cloudinary')
 const slash = require(`slash`)
 const crypto = require(`crypto`)
@@ -10,9 +7,11 @@ const path = require(`path`)
 const select = require(`unist-util-select`)
 const md5File = require('md5-file/promise')
 const _ = require(`lodash`)
-const Promise = require(`bluebird`)
 import { uploadOrGetMetadata } from 'cloudinary-promised'
-import { videoHTML } from './utils/videoHTML'
+import {
+    FastImageVideoBestProps,
+    FastImageImageBestProps,
+} from '../node_modules/react-fast-image'
 
 const defaults = {
     maxWidth: 650,
@@ -39,7 +38,15 @@ const getImageNode = ({ node, files, parentNode }) => {
 }
 
 // Gets a cache key that is unique for a given image and set of options.
-const getCacheKey = async ({ path, options, fileName }) => {
+const getCacheKey = async ({
+    path,
+    options,
+    fileName,
+}: {
+    path: string
+    options: any
+    fileName: string
+}) => {
     const optionsHash = crypto
         .createHash(`md5`)
         .update(JSON.stringify(options))
@@ -60,22 +67,10 @@ const htmlForNode = async function({
     const id = await md5File(absolutePath)
 
     // Uploading to cloudinary, or just getting dimensions if it's already there.
-    const file = await uploadOrGetMetadata(
-        id,
-        absolutePath,
-        cloudinaryConfig,
-    )
+    const file = await uploadOrGetMetadata(id, absolutePath, cloudinaryConfig)
 
+    // Original width and height.
     const { width, height } = file
-
-    // Will be used go reserve space for the media.
-    const aspectRatio = width / height
-
-    // Calculate the paddingBottom %.
-    const paddingBottom = `${(1 / aspectRatio) * 100}%`
-
-    // The original src. Used as a fallback.
-    const fullSizeSrc = file.secure_url
 
     // The width this media will be shown at.
     // Min of max width and actual width.
@@ -85,10 +80,11 @@ const htmlForNode = async function({
 
     const isVideo = absolutePath.endsWith('.mp4')
     if (isVideo) {
-        const srcVideoPoster = `https://res.cloudinary.com/${
+        const videoPosterSrc = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
         }/video/upload/w_${presentationWidth}/${id}.jpg`
-        const srcVideo = `https://res.cloudinary.com/${
+        const videoPosterWebPSrc = videoPosterSrc.replace('.jpg', '.webp')
+        const videoSrc = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
         }/video/upload/w_${presentationWidth}/${id}.mp4`
 
@@ -97,60 +93,49 @@ const htmlForNode = async function({
             cloudinaryConfig.cloud_name
         }/video/upload/w_${options.base64Width}/${id}.png`
 
-        const base64 = await getBase64ImgFromUrl(base64Url)
+        const videoPosterBase64 = await getBase64ImgFromUrl(base64Url)
 
-        rawHTML = videoHTML({
-            srcVideo,
-            srcVideoPoster,
-            base64,
-            paddingBottom,
-            presentationWidth,
-        })
+        const props: FastImageVideoBestProps = {
+            videoSrc,
+            videoPosterSrc,
+            videoPosterWebPSrc,
+            videoPosterBase64,
+            width,
+            height,
+        }
+        rawHTML = imgHTML(props)
     } else {
         // Responsive image sources
-        const srcSet = ''
+        const imgSrcSet = ''
+        const imgWebPSrcSet = ''
 
         // The sizes.
-        const sizes = `(max-width: ${presentationWidth}px) 100vw, ${presentationWidth}px`
+        const imgSizes = `(max-width: ${presentationWidth}px) 100vw, ${presentationWidth}px`
 
         // Fallback src for max width.
-        const srcFallback = `https://res.cloudinary.com/${
+        const imgSrc = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
         }/image/upload/w_${presentationWidth}/${id}.jpg`
+        const imgWebPSrc = imgSrc.replace('.jpg', '.webp')
 
         // Base64 version of the image.
         const base64Url = `https://res.cloudinary.com/${
             cloudinaryConfig.cloud_name
         }/image/upload/w_${options.base64Width}/${id}.jpg`
-        const base64 = await getBase64ImgFromUrl(base64Url)
+        const imgBase64 = await getBase64ImgFromUrl(base64Url)
 
-        // Construct new image node w/ aspect ratio placeholder
-        rawHTML = imgHTML({
-            title: node.title,
-            alt: node.alt,
-            srcFallback,
-            srcSet,
-            base64,
-            sizes,
-            paddingBottom,
-            presentationWidth,
-        })
-    }
-
-    // Make linking to original image optional.
-    if (options.linkImagesToOriginal) {
-        rawHTML = linkToOriginalHTML({
-            original: fullSizeSrc,
-            children: rawHTML,
-        })
-    }
-
-    // Wrap in figure and use title as caption
-    if (options.showCaptions && node.title) {
-        rawHTML = captionHTML({
-            node,
-            children: rawHTML,
-        })
+        const props: FastImageImageBestProps = {
+            imgAlt: node.alt,
+            imgSrc,
+            imgWebPSrc,
+            imgSrcSet,
+            imgWebPSrcSet,
+            imgBase64,
+            imgSizes,
+            width,
+            height,
+        }
+        rawHTML = imgHTML(props)
     }
 
     return rawHTML
@@ -184,7 +169,6 @@ const cachedHtmlForNode = async ({
     const result = await htmlForNode({
         node,
         files,
-        cacheKey,
         imageNode,
         cloudinaryConfig,
         options,
