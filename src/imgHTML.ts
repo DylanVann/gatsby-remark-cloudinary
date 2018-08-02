@@ -2,6 +2,7 @@ import {
     FastImageImageBestProps,
     FastImageVideoBestProps,
 } from 'react-fast-image'
+import dashify from 'dashify'
 
 export default (
     props: FastImageImageBestProps | FastImageVideoBestProps,
@@ -10,7 +11,7 @@ export default (
     out += '<fast-image'
     for (let key in props) {
         if (props.hasOwnProperty(key)) {
-            out += ` ${key.toLowerCase()}="${(props as any)[key]}"`
+            out += ` ${dashify(key)}="${(props as any)[key]}"`
         }
     }
     out += '></fast-image>'

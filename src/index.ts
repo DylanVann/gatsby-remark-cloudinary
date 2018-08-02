@@ -1,31 +1,48 @@
-import { getBase64ImgFromUrl } from './getBase64ImgFromUrl'
 import imgHTML from './imgHTML'
-const cloudinary = require('cloudinary')
+import { getData } from '@dylanvann/gatsby-cloudinary'
+import { CloudinaryOptions } from 'cloudinary-promised'
 const slash = require(`slash`)
 const crypto = require(`crypto`)
 const path = require(`path`)
 const select = require(`unist-util-select`)
 const md5File = require('md5-file/promise')
 const _ = require(`lodash`)
-import { uploadOrGetMetadata } from 'cloudinary-promised'
-import {
-    FastImageVideoBestProps,
-    FastImageImageBestProps,
-} from '../node_modules/react-fast-image'
 
-const defaults = {
-    maxWidth: 650,
-    base64Width: 10,
-    wrapperStyle: ``,
-    backgroundColor: `white`,
-    linkImagesToOriginal: false,
-    showCaptions: false,
+interface PluginOptions {
+    maxWidth?: number
+    config: CloudinaryOptions
+}
+
+interface Node {
+    parent: Node
+    type: string
+    value: string
+    url: string
+    dir: string
+    absolutePath: string
+}
+
+interface File {
+    absolutePath: string
+}
+
+interface Cache {
+    set: (key: string, value: any) => any
+    get: (key: string) => Promise<string | null>
 }
 
 // Gets the imageNode containing info like the absolutePath.
-const getImageNode = ({ node, files, parentNode }) => {
+const getImageNode = ({
+    node,
+    files,
+    parentNode,
+}: {
+    node: Node
+    files: File[]
+    parentNode: Node
+}) => {
     const imagePath = slash(path.join(parentNode.dir, node.url))
-    const imageNode = _.find(files, file => {
+    const imageNode = _.find(files, (file: File) => {
         if (file && file.absolutePath) {
             return file.absolutePath === imagePath
         }
@@ -40,105 +57,34 @@ const getImageNode = ({ node, files, parentNode }) => {
 // Gets a cache key that is unique for a given image and set of options.
 const getCacheKey = async ({
     path,
-    options,
-    fileName,
+    pluginOptions,
 }: {
     path: string
-    options: any
-    fileName: string
+    pluginOptions: PluginOptions
 }) => {
     const optionsHash = crypto
         .createHash(`md5`)
-        .update(JSON.stringify(options))
+        .update(JSON.stringify(pluginOptions))
         .digest('hex')
     const contentsHash = await md5File(path)
-    return `remark-images-cloudinary-${fileName}-${optionsHash}-${contentsHash}`
+    return `remark-images-cloudinary-${optionsHash}-${contentsHash}`
 }
 
 // Returns the html for a markdown media node.
 const htmlForNode = async function({
-    node,
-    files,
     imageNode,
-    cloudinaryConfig,
-    options,
+    pluginOptions,
+}: {
+    imageNode: Node
+    pluginOptions: PluginOptions
 }) {
     const absolutePath = imageNode.absolutePath
-    const id = await md5File(absolutePath)
-
-    // Uploading to cloudinary, or just getting dimensions if it's already there.
-    const file = await uploadOrGetMetadata(id, absolutePath, cloudinaryConfig)
-
-    // Original width and height.
-    const { width, height } = file
-
-    // The width this media will be shown at.
-    // Min of max width and actual width.
-    const presentationWidth = Math.min(options.maxWidth, width)
-
-    let rawHTML
-
-    const isVideo = absolutePath.endsWith('.mp4')
-    if (isVideo) {
-        const videoPosterSrc = `https://res.cloudinary.com/${
-            cloudinaryConfig.cloud_name
-        }/video/upload/w_${presentationWidth}/${id}.jpg`
-        const videoPosterWebPSrc = videoPosterSrc.replace('.jpg', '.webp')
-        const videoSrc = `https://res.cloudinary.com/${
-            cloudinaryConfig.cloud_name
-        }/video/upload/w_${presentationWidth}/${id}.mp4`
-
-        // Base64 version of the poster.
-        const base64Url = `https://res.cloudinary.com/${
-            cloudinaryConfig.cloud_name
-        }/video/upload/w_${options.base64Width}/${id}.png`
-
-        const videoPosterBase64 = await getBase64ImgFromUrl(base64Url)
-
-        const props: FastImageVideoBestProps = {
-            videoSrc,
-            videoPosterSrc,
-            videoPosterWebPSrc,
-            videoPosterBase64,
-            width,
-            height,
-        }
-        rawHTML = imgHTML(props)
-    } else {
-        const imgAlt = node.alt
-        // Responsive image sources
-        const imgSrcSet = ''
-        const imgWebPSrcSet = ''
-
-        // The sizes.
-        const imgSizes = `(max-width: ${presentationWidth}px) 100vw, ${presentationWidth}px`
-
-        // Fallback src for max width.
-        const imgSrc = `https://res.cloudinary.com/${
-            cloudinaryConfig.cloud_name
-        }/image/upload/w_${presentationWidth}/${id}.jpg`
-        const imgWebPSrc = imgSrc.replace('.jpg', '.webp')
-
-        // Base64 version of the image.
-        const base64Url = `https://res.cloudinary.com/${
-            cloudinaryConfig.cloud_name
-        }/image/upload/w_${options.base64Width}/${id}.jpg`
-        const imgBase64 = await getBase64ImgFromUrl(base64Url)
-
-        const props: FastImageImageBestProps = {
-            imgAlt,
-            imgSrc,
-            imgWebPSrc,
-            imgSrcSet,
-            imgWebPSrcSet,
-            imgBase64,
-            imgSizes,
-            width,
-            height,
-        }
-        rawHTML = imgHTML(props)
-    }
-
+    const props = await getData({
+        path: absolutePath,
+        maxWidth: pluginOptions.maxWidth,
+        config: pluginOptions.config,
+    })
+    const rawHTML = imgHTML(props)
     return rawHTML
 }
 
@@ -147,51 +93,51 @@ const cachedHtmlForNode = async ({
     files,
     cache,
     parentNode,
-    cloudinaryConfig,
-    options,
-}) => {
-    const srcSplit = node.url.split(`/`)
-    const fileName = srcSplit[srcSplit.length - 1]
-
+    pluginOptions,
+}: {
+    node: Node
+    files: File[]
+    cache: Cache
+    parentNode: Node
+    pluginOptions: PluginOptions
+}): Promise<string | undefined> => {
     const imageNode = getImageNode({ node, files, parentNode })
     if (!imageNode) return
-    const absolutePath = imageNode.absolutePath
-
+    const path = imageNode.absolutePath
     const cacheKey = await getCacheKey({
-        path: absolutePath,
-        options,
-        fileName,
+        path,
+        pluginOptions,
     })
+
     const cachedRawHTML = await cache.get(cacheKey)
     if (cachedRawHTML) {
         return cachedRawHTML
     }
 
     const result = await htmlForNode({
-        node,
-        files,
         imageNode,
-        cloudinaryConfig,
-        options,
+        pluginOptions,
     })
     await cache.set(cacheKey, result)
     return result
 }
 
 module.exports = async (
-    { files, markdownNode, markdownAST, pathPrefix, getNode, reporter, cache },
-    pluginOptions,
+    {
+        files,
+        markdownNode,
+        markdownAST,
+        getNode,
+        cache,
+    }: {
+        files: File[]
+        markdownNode: Node
+        markdownAST: any
+        getNode: any
+        cache: Cache
+    },
+    pluginOptions: PluginOptions,
 ) => {
-    const options = _.defaults(pluginOptions, defaults, { pathPrefix })
-
-    const cloudinaryConfig = {
-        cloud_name: pluginOptions.cloudName,
-        api_key: pluginOptions.apiKey,
-        api_secret: pluginOptions.apiSecret,
-    }
-
-    cloudinary.config(cloudinaryConfig)
-
     // This will only work for markdown syntax image tags
     const markdownImageNodes = select(markdownAST, `image`)
 
@@ -201,21 +147,23 @@ module.exports = async (
     if (!parentNode || !parentNode.dir) return null
 
     const promises = markdownImageNodes.map(
-        node =>
-            new Promise(resolve => {
+        (node: Node) =>
+            new Promise((resolve, reject) => {
                 cachedHtmlForNode({
                     node,
                     files,
                     cache,
                     parentNode,
-                    cloudinaryConfig,
-                    options,
-                }).then(html => {
-                    // Replace the image node with an inline HTML node.
-                    node.type = `html`
-                    node.value = html
-                    resolve(node)
+                    pluginOptions,
                 })
+                    .then((html: string | undefined) => {
+                        if (!html) return
+                        // Replace the image node with an inline HTML node.
+                        node.type = `html`
+                        node.value = html
+                        resolve(node)
+                    })
+                    .catch(e => reject(e))
             }),
     )
 
