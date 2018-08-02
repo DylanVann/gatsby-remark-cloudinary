@@ -3,3 +3,5 @@ node_modules
 /__tests__/*
 tests
 /*.js
+!.babelrc.js
+!.prettierrc.js
