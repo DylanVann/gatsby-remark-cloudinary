@@ -1,6 +1,5 @@
 import imgHTML from './imgHTML'
 import { getData } from '@dylanvann/gatsby-cloudinary'
-import { CloudinaryOptions } from 'cloudinary-promised'
 const slash = require(`slash`)
 const crypto = require(`crypto`)
 const path = require(`path`)
@@ -10,7 +9,9 @@ const _ = require(`lodash`)
 
 interface PluginOptions {
     maxWidth?: number
-    config: CloudinaryOptions
+    cloudName: string
+    apiKey: string
+    apiSecret: string
 }
 
 interface Node {
@@ -82,7 +83,11 @@ const htmlForNode = async function({
     const props = await getData({
         path: absolutePath,
         maxWidth: pluginOptions.maxWidth,
-        config: pluginOptions.config,
+        config: {
+            api_key: pluginOptions.apiKey,
+            api_secret: pluginOptions.apiSecret,
+            cloud_name: pluginOptions.cloudName,
+        },
     })
     const rawHTML = imgHTML(props)
     return rawHTML
@@ -122,7 +127,7 @@ const cachedHtmlForNode = async ({
     return result
 }
 
-module.exports = async (
+export default async (
     {
         files,
         markdownNode,
