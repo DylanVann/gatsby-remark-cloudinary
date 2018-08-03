@@ -14,6 +14,7 @@
     "tsc": "tsc",
     "lint": "tslint -p . -t codeFrame 'src/**/*.{js,jsx,ts,tsx}'",
     "build": "babel --extensions '.ts' src --out-dir . --ignore **/__tests__",
+    "test": "return 0",
     "format": "prettier --write 'src/**/*.ts' '*.js'",
     "prepare": "cross-env NODE_ENV=production npm run build",
     "watch": "babel -w src --out-dir . --ignore **/__tests__"
