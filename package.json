@@ -1,6 +1,6 @@
 {
   "name": "@dylanvann/gatsby-remark-cloudinary",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Convert media to custom components with cloudinary urls.",
   "keywords": [
     "cloudinary",
