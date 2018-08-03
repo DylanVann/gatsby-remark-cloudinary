@@ -557,9 +557,9 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@dylanvann/gatsby-cloudinary@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@dylanvann/gatsby-cloudinary/-/gatsby-cloudinary-0.0.7.tgz#c1236c14f653eab9f6f30b3df7678e38d7262c55"
+"@dylanvann/gatsby-cloudinary@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@dylanvann/gatsby-cloudinary/-/gatsby-cloudinary-0.0.8.tgz#203ba029ee8c348a357e05539f980934d1748b36"
   dependencies:
     axios "^0.18.0"
     classnames "^2.2.6"
