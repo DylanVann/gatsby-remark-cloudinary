@@ -127,7 +127,7 @@ const cachedHtmlForNode = async ({
     return result
 }
 
-export default async (
+module.exports = async (
     {
         files,
         markdownNode,
