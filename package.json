@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.0.0-beta.51",
-    "@dylanvann/gatsby-cloudinary": "^0.0.3",
+    "@dylanvann/gatsby-cloudinary": "^0.0.5",
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
     "cloudinary-promised": "^1.0.7",
