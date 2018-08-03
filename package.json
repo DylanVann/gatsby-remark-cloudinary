@@ -13,14 +13,14 @@
   "scripts": {
     "tsc": "tsc",
     "lint": "tslint -p . -t codeFrame 'src/**/*.{js,jsx,ts,tsx}'",
-    "build": "babel --extensions '.ts' src --out-dir . --ignore **/__tests__",
+    "build": "babel --extensions '.ts' src --out-dir .",
     "test": "exit 0",
     "format": "prettier --write 'src/**/*.ts' '*.js'",
     "prepare": "cross-env NODE_ENV=production npm run build",
     "watch": "babel -w src --out-dir . --ignore **/__tests__"
   },
   "dependencies": {
-    "@dylanvann/gatsby-cloudinary": "^0.0.6",
+    "@dylanvann/gatsby-cloudinary": "^0.0.7",
     "lodash": "^4.17.4",
     "md5-file": "^4.0.0",
     "react-fast-image": "^0.0.21",
