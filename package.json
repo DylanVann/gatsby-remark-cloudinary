@@ -20,7 +20,7 @@
     "watch": "babel -w src --out-dir . --ignore **/__tests__"
   },
   "dependencies": {
-    "@dylanvann/gatsby-cloudinary": "^0.0.5",
+    "@dylanvann/gatsby-cloudinary": "^0.0.6",
     "lodash": "^4.17.4",
     "md5-file": "^4.0.0",
     "react-fast-image": "^0.0.21",
