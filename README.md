@@ -19,7 +19,7 @@ yarn add @dylanvann/gatsby-remark-cloudinary
 module.exports = {
     plugins: [
         {
-            resolve: '@dylanvann/gatsby-transformer-cloudinary',
+            resolve: '@dylanvann/gatsby-remark-cloudinary',
             options: {
                 cloudName: '...',
                 apiKey: '...',
